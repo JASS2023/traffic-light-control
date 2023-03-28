@@ -143,4 +143,4 @@ jobs:
                       path: /dev/gpiomem" > manifest.yml
 
       - name: Set Kube Config
-        run: kubectl apply -f manifest.yml
+        run: kubectl rollout restart -f manifest.yml
