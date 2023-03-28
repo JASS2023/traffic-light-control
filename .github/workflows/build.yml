@@ -72,5 +72,5 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Set kube config
+      - name: Set Kube Config
         run: kubectl apply -f ./kube/config
