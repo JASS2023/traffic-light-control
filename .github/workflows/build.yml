@@ -120,7 +120,7 @@ jobs:
             strategy:
               type: RollingUpdate
               rollingUpdate:
-                maxSurge: 1
+                maxSurge: 0
                 maxUnavailable: 0
             selector:
               matchLabels:
