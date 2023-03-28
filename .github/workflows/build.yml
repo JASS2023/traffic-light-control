@@ -69,8 +69,6 @@ jobs:
 
   pushHarbor:
     needs: build
-    env:
-      IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
     runs-on: self-hosted
     steps:
       - name: Pull Image from Github Container Registry
@@ -91,8 +89,6 @@ jobs:
 
   deploy:
     needs: pushHarbor
-    env:
-      IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
     runs-on: self-hosted
     steps:
       - name: Deploy
