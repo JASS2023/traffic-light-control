@@ -67,17 +67,40 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           push: true
 
-      - name: Do smth
-        run: echo ${{ steps.compute-tag.outputs.result }} >> $IMAGE_VERSION
-
   pushHarbor:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Compute Tag
+        uses: actions/github-script@v6
+        id: compute-tag
+        with:
+          result-encoding: string
+          script: |
+            if (context.eventName === "pull_request") {
+              return "pr-" + context.issue.number;
+            }
+            if (context.eventName === "release") {
+              return "latest";
+            }
+            if (context.eventName === "push") {
+              if (context.ref.startsWith("refs/tags/")) {
+                return context.ref.slice(10);
+              }
+              if (context.ref === "refs/heads/develop") {
+                return "develop";
+              }
+            }
+            return "FALSE";
+
       - name: Pull Image from Github Container Registry
+        env:
+          IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
         run: docker pull ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       - name: Retag Image
+        env:
+          IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
         run: docker tag ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }} ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       - name: Login to Harbor
@@ -88,18 +111,44 @@ jobs:
           password: ${{ secrets.HARBOR_TOKEN }}
 
       - name: Push to Harbor
+        env:
+          IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
         run: docker push ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
   deploy:
     needs: pushHarbor
     runs-on: self-hosted
     steps:
+      - name: Compute Tag
+        uses: actions/github-script@v6
+        id: compute-tag
+        with:
+          result-encoding: string
+          script: |
+            if (context.eventName === "pull_request") {
+              return "pr-" + context.issue.number;
+            }
+            if (context.eventName === "release") {
+              return "latest";
+            }
+            if (context.eventName === "push") {
+              if (context.ref.startsWith("refs/tags/")) {
+                return context.ref.slice(10);
+              }
+              if (context.ref === "refs/heads/develop") {
+                return "develop";
+              }
+            }
+            return "FALSE";
+
       - name: Deploy
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
 
       - name: Create manifest
+        env:
+          IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
         run: |
           touch manifest.yml
           echo "
