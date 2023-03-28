@@ -22,11 +22,11 @@ GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 try:
     while True:
         # Red phase
-        turn_on_led(LED_RED_GPIO, duration=5)
+        turn_on_led(LED_RED_GPIO, duration=10)
         # Prepare green 
         turn_on_led(LED_RED_GPIO, LED_YELLOW_GPIO, duration=2)       
         # Green phase
-        turn_on_led(LED_GREEN_GPIO, duration=5)   
+        turn_on_led(LED_GREEN_GPIO, duration=10)   
         # Yellow phase
         turn_on_led(LED_YELLOW_GPIO, duration=2)
 except KeyboardInterrupt:
