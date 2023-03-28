@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      image_version: ${{ steps.output-tag.outputs.image_version }}
+      image_version: ${{ steps.outputtag.outputs.image_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -59,7 +59,7 @@ jobs:
             }
             return "FALSE";
 
-      - name: Output Tag
+      - id: outputtag
         run: echo "image_version=${{ steps.compute-tag.outputs.result }}" >> "$GITHUB_OUTPUT"
 
       - name: Build Image and Push to GitHub Container Registry
