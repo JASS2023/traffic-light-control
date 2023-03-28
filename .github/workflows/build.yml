@@ -72,5 +72,5 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Kubectl nodes
-        run: kubectl get nodes
+      - name: Set kube config
+        run: kubectl apply -f ./kube/config

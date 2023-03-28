@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-light
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traffic-light
+  template:
+    metadata:
+      labels:
+        app: traffic-light
+    spec:
+      containers:
+        - name: traffic-light
+          image: ghcr.io/jass2023/traffic-light-control:latest
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: dev-gpiomem
+              mountPath: /dev/gpiomem
+      volumes:
+        - name: dev-gpiomem
+          hostPath:
+            path: /dev/gpiomem
