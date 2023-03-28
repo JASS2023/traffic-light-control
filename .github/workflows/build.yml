@@ -64,7 +64,7 @@ jobs:
         run: docker push ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
   deploy:
-    needs: build
+    needs: pushHarbor
     runs-on: self-hosted
     steps:
       - name: Deploy
