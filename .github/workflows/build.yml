@@ -35,8 +35,32 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Compute Tag
+        uses: actions/github-script@v6
+        id: compute-tag
+        with:
+          result-encoding: string
+          script: |
+            if (context.eventName === "pull_request") {
+              return "pr-" + context.issue.number;
+            }
+            if (context.eventName === "release") {
+              return "latest";
+            }
+            if (context.eventName === "push") {
+              if (context.ref.startsWith("refs/tags/")) {
+                return context.ref.slice(10);
+              }
+              if (context.ref === "refs/heads/develop") {
+                return "develop";
+              }
+            }
+            return "FALSE";
+
       - name: Build Image and Push to GitHub Container Registry
         uses: docker/build-push-action@v2
+        env:
+          IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
         with:
           context: .
           tags: ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
@@ -45,6 +69,8 @@ jobs:
 
   pushHarbor:
     needs: build
+    env:
+      IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
     runs-on: self-hosted
     steps:
       - name: Pull Image from Github Container Registry
@@ -65,12 +91,45 @@ jobs:
 
   deploy:
     needs: pushHarbor
+    env:
+      IMAGE_VERSION: ${{ steps.compute-tag.outputs.result }}
     runs-on: self-hosted
     steps:
       - name: Deploy
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
+
+      - name: Create manifest
+        run: |
+          touch manifest.yml
+          echo "
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: traffic-light
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: traffic-light
+            template:
+              metadata:
+                labels:
+                  app: traffic-light
+              spec:
+                containers:
+                  - name: traffic-light
+                    image: ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+                    securityContext:
+                      privileged: true
+                    volumeMounts:
+                      - name: dev-gpiomem
+                        mountPath: /dev/gpiomem
+                volumes:
+                  - name: dev-gpiomem
+                    hostPath:
+                      path: /dev/gpiomem" > manifest.yml
 
       - name: Set Kube Config
         run: kubectl apply -f manifest.yml
