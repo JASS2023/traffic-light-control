@@ -73,6 +73,9 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Set Compute Tag as env variable
+        run: echo "$IMAGE_VERSION"
+
       - name: Pull Image from Github Container Registry
         env:
           IMAGE_VERSION: ${{ needs.build.env.IMAGE_VERSION }}
