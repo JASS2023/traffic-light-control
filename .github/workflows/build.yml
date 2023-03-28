@@ -126,7 +126,6 @@ jobs:
               metadata:
                 labels:
                   app: traffic-light
-                  hash: ${{ github.event.pull_request.head.sha }}
               spec:
                 containers:
                   - name: traffic-light
