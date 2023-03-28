@@ -4,7 +4,7 @@ env:
   HARBOR_URL: harbor.mtze.me
   HARBOR_PROJECT: jass23
   IMAGE_NAME: traffic-light-control
-  IMAGE_VERSION: latest
+  IMAGE_VERSION: red
 
 on:
   push:
