@@ -130,6 +130,7 @@ jobs:
                 containers:
                   - name: traffic-light
                     image: ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+                    imagePullPolicy: Always
                     securityContext:
                       privileged: true
                     volumeMounts:
