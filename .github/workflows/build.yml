@@ -15,6 +15,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image_version: ${{ steps.output-tag.outputs.image_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -57,8 +59,8 @@ jobs:
             }
             return "FALSE";
 
-      - name: Set Compute Tag as env variable
-        run: echo "IMAGE_VERSION=${{ steps.compute-tag.outputs.result }}" >> $GITHUB_ENV
+      - name: Output Tag
+        run: echo "image_version=${{ steps.compute-tag.outputs.result }}" >> "$GITHUB_OUTPUT"
 
       - name: Build Image and Push to GitHub Container Registry
         uses: docker/build-push-action@v2
@@ -76,7 +78,7 @@ jobs:
     steps:
       - name: Set Compute Tag as env variable
         env:
-          IMAGE_VERSION: ${{ needs.build.env.IMAGE_VERSION }}
+          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: echo "${{ env.IMAGE_VERSION }}"
 
       - name: Debug
@@ -84,12 +86,12 @@ jobs:
 
       - name: Pull Image from Github Container Registry
         env:
-          IMAGE_VERSION: ${{ needs.build.env.IMAGE_VERSION }}
+          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: docker pull ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       - name: Retag Image
         env:
-          IMAGE_VERSION: ${{ needs.build.env.IMAGE_VERSION }}
+          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: docker tag ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }} ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       - name: Login to Harbor
@@ -101,7 +103,7 @@ jobs:
 
       - name: Push to Harbor
         env:
-          IMAGE_VERSION: ${{ needs.build.env.IMAGE_VERSION }}
+          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: docker push ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
   deploy:
@@ -115,7 +117,7 @@ jobs:
 
       - name: Create manifest
         env:
-          IMAGE_VERSION: ${{ needs.build.env.IMAGE_VERSION }}
+          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: |
           touch manifest.yml
           echo "
