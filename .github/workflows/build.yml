@@ -118,10 +118,7 @@ jobs:
           spec:
             replicas: 1
             strategy:
-              type: RollingUpdate
-              rollingUpdate:
-                maxSurge: 0
-                maxUnavailable: 0
+              type: Recreate
             selector:
               matchLabels:
                 app: traffic-light
