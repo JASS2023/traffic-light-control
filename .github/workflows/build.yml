@@ -44,7 +44,7 @@ jobs:
           push: true
 
   pushHarbor:
-    run-on: self-hosted
+    runs-on: self-hosted
     steps:
       - name: Pull Image from Github Container Registry
         run: docker pull ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
