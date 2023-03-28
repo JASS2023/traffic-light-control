@@ -19,11 +19,7 @@ GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 try:
     while True:
-        turn_on_led(LED_RED_GPIO)
-        sleep(1)
-        turn_on_led(LED_YELLOW_GPIO)
-        sleep(1)
-        turn_on_led(LED_GREEN_GPIO)
+        turn_on_led(LED_GREEN_GPIO, duration=1)
         sleep(1)              
 except KeyboardInterrupt:
     pass
