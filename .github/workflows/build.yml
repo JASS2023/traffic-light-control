@@ -73,4 +73,4 @@ jobs:
           fetch-depth: 1
 
       - name: Set Kube Config
-        run: kubectl apply -f ~/.kube/config
+        run: kubectl apply -f manifest.yml
