@@ -4,6 +4,7 @@ env:
   HARBOR_URL: harbor.mtze.me
   HARBOR_PROJECT: jass23
   IMAGE_NAME: traffic-light-control
+  BRANCH_NAME: ${GITHUB_REF##*/}
 
 on:
   push:
@@ -77,6 +78,9 @@ jobs:
         env:
           IMAGE_VERSION: ${{ needs.build.env.IMAGE_VERSION }}
         run: echo "${{ env.IMAGE_VERSION }}"
+
+      - name: Debug
+        run: echo "${{ env.BRANCH_NAME }}"
 
       - name: Pull Image from Github Container Registry
         env:
