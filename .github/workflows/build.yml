@@ -4,7 +4,6 @@ env:
   HARBOR_URL: harbor.mtze.me
   HARBOR_PROJECT: jass23
   IMAGE_NAME: traffic-light-control
-  BRANCH_NAME: ${GITHUB_REF##*/}
 
 on:
   push:
@@ -16,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      image_version: ${{ steps.outputtag.outputs.image_version }}
+      image_version: ${{ steps.output-tag.outputs.image_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -59,7 +58,7 @@ jobs:
             }
             return "FALSE";
 
-      - id: outputtag
+      - id: output-tag
         run: echo "image_version=${{ steps.compute-tag.outputs.result }}" >> "$GITHUB_OUTPUT"
 
       - name: Build Image and Push to GitHub Container Registry
@@ -75,23 +74,16 @@ jobs:
   pushHarbor:
     needs: build
     runs-on: self-hosted
+    env:
+      IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
     steps:
       - name: Set Compute Tag as env variable
-        env:
-          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: echo "${{ env.IMAGE_VERSION }}"
 
-      - name: Debug
-        run: echo "${{ env.BRANCH_NAME }}"
-
       - name: Pull Image from Github Container Registry
-        env:
-          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: docker pull ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       - name: Retag Image
-        env:
-          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: docker tag ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }} ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       - name: Login to Harbor
@@ -102,8 +94,6 @@ jobs:
           password: ${{ secrets.HARBOR_TOKEN }}
 
       - name: Push to Harbor
-        env:
-          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: docker push ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
   deploy:
