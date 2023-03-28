@@ -4,7 +4,6 @@ env:
   HARBOR_URL: harbor.mtze.me
   HARBOR_PROJECT: jass23
   IMAGE_NAME: traffic-light-control
-  IMAGE_VERSION: latest
 
 on:
   push:
@@ -15,6 +14,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image_version: ${{ steps.output-tag.outputs.image_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -57,6 +58,9 @@ jobs:
             }
             return "FALSE";
 
+      - id: output-tag
+        run: echo "image_version=${{ steps.compute-tag.outputs.result }}" >> "$GITHUB_OUTPUT"
+
       - name: Build Image and Push to GitHub Container Registry
         uses: docker/build-push-action@v2
         env:
@@ -70,7 +74,12 @@ jobs:
   pushHarbor:
     needs: build
     runs-on: self-hosted
+    env:
+      IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
     steps:
+      - name: Set Compute Tag as env variable
+        run: echo "${{ env.IMAGE_VERSION }}"
+
       - name: Pull Image from Github Container Registry
         run: docker pull ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
@@ -88,7 +97,7 @@ jobs:
         run: docker push ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
   deploy:
-    needs: pushHarbor
+    needs: [build, pushHarbor]
     runs-on: self-hosted
     steps:
       - name: Deploy
@@ -97,6 +106,8 @@ jobs:
           fetch-depth: 1
 
       - name: Create manifest
+        env:
+          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
         run: |
           touch manifest.yml
           echo "
@@ -106,6 +117,11 @@ jobs:
             name: traffic-light
           spec:
             replicas: 1
+            strategy:
+              type: RollingUpdate
+              rollingUpdate:
+                maxSurge: 1
+                maxUnavailable: 0
             selector:
               matchLabels:
                 app: traffic-light
