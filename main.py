@@ -1,11 +1,13 @@
 import RPi.GPIO as GPIO
 from time import sleep
 
-def turn_on_led(gpio_num: int, duration: float = 3):
+def turn_on_led(*args, duration: float = 3):
     """Turn on the LED for a given gpio pin"""
-    GPIO.output(gpio_num, GPIO.HIGH)
+    for pin in args:
+        GPIO.output(pin, GPIO.HIGH)
     sleep(duration)
-    GPIO.output(gpio_num, GPIO.LOW)
+    for pin in args:
+        GPIO.output(pin, GPIO.LOW)
 
 LED_RED_GPIO = 14
 LED_YELLOW_GPIO = 18
@@ -19,12 +21,14 @@ GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 try:
     while True:
-        turn_on_led(LED_RED_GPIO)
-        sleep(1)
-        turn_on_led(LED_YELLOW_GPIO)
-        sleep(1)
-        turn_on_led(LED_GREEN_GPIO)
-        sleep(1)              
+        # Red phase
+        turn_on_led(LED_RED_GPIO, duration=10)
+        # Prepare green 
+        turn_on_led(LED_RED_GPIO, LED_YELLOW_GPIO, duration=2)       
+        # Green phase
+        turn_on_led(LED_GREEN_GPIO, duration=10)   
+        # Yellow phase
+        turn_on_led(LED_YELLOW_GPIO, duration=2)
 except KeyboardInterrupt:
     pass
 finally:
