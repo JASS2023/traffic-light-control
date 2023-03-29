@@ -101,7 +101,7 @@ jobs:
     runs-on: self-hosted
     strategy:
       matrix:
-        kube-contex: [rpi1, rpi2, rpi3]
+        kube-contex: ['rpi1', 'rpi2', 'rpi3']
     steps:
       - name: Deploy
         uses: actions/checkout@v3
