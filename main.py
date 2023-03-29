@@ -43,6 +43,7 @@ if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
     client.on_connect = on_connect
     client.on_message = on_message
     client.loop_forever()
+    client.disconnect();
 else:
   try:
     while True:
@@ -59,10 +60,8 @@ else:
         turn_on_led(LED_YELLOW_GPIO, duration=2)
         # Green phase
         turn_on_led(LED_GREEN_GPIO, duration=10)
+        client.disconnect();
 except KeyboardInterrupt:
     pass
-
-client.disconnect();
-
 finally:
     GPIO.cleanup()
