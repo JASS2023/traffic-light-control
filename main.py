@@ -25,25 +25,28 @@ client = mqtt.Client()
 client.connect(os.environ['MQTT_BROKER_IP'],os.environ['MQTT_BROKER_PORT'],60)
 
 if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
-    def on_connect(client,userdata,rc):
-        client.subscribe("topic/lights")
-    def on_message(client,userdata,msg):
-        if msg.payload.decode() == "red":
-            # Red phase
-            turn_on_led(LED_RED_GPIO, duration=14)
-        if msg.payload.decode() == "yellow":
-            # Yellow phase
-            turn_on_led(LED_YELLOW_GPIO, duration=2)
-        if msg.payload.decode() == "green":
-            # Green phase
-            turn_on_led(LED_GREEN_GPIO, duration=10)
-        if msg.payload.decode() == "prepare":
-            # Prepare green 
-            turn_on_led(LED_RED_GPIO, LED_YELLOW_GPIO, duration=2)
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.loop_forever()
-    client.disconnect();
+    try:
+        def on_connect(client,userdata,rc):
+            client.subscribe("topic/lights")
+        def on_message(client,userdata,msg):
+            if msg.payload.decode() == "red":
+                # Red phase
+                turn_on_led(LED_RED_GPIO, duration=14)
+            if msg.payload.decode() == "yellow":
+                # Yellow phase
+                turn_on_led(LED_YELLOW_GPIO, duration=2)
+            if msg.payload.decode() == "green":
+                # Green phase
+                turn_on_led(LED_GREEN_GPIO, duration=10)
+            if msg.payload.decode() == "prepare":
+                # Prepare green 
+                turn_on_led(LED_RED_GPIO, LED_YELLOW_GPIO, duration=2)
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.loop_forever()
+        client.disconnect();
+    except KeyboardInterrupt:
+      pass
 else:
   try:
     while True:
@@ -61,7 +64,7 @@ else:
         # Green phase
         turn_on_led(LED_GREEN_GPIO, duration=10)
         client.disconnect();
-except KeyboardInterrupt:
+  except KeyboardInterrupt:
     pass
-finally:
+  finally:
     GPIO.cleanup()
