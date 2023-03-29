@@ -101,14 +101,14 @@ jobs:
     runs-on: self-hosted
     strategy:
       matrix:
-        context: [rpi1, rpi2, rpi3]
+        kcontext: [rpi1, rpi2, rpi3]
     steps:
       - name: Deploy
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Change kubernetes context
-        run: kubectx ${{ matrix.context }}
+        run: kubectx ${{ matrix.kcontext }}
       - name: Create manifest
         env:
           IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
