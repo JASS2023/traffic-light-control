@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 from time import sleep
 import paho.mqtt.client as mqtt
+import os
 
 def turn_on_led(gpio_num: int, duration: float = 3):
    """Turn on the LED for a given gpio pin"""
@@ -19,9 +20,9 @@ GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 client = mqtt.Client()
-client.connect("192.168.213.3",1883,60)
+client.connect(os.environ['MQTT_BROKER_IP'],1883,60)
 
-if (subscriber):
+if !os.environ['TRAFFIC_LIGHT_IS_LEADER']:
   def on_connect(client,userdata,rc):
      client.subscribe("topic/lights")
 
@@ -35,8 +36,7 @@ if (subscriber):
   client.on_connect = on_connect
   client.on_message = on_message
   client.loop_forever()
-
-if (publisher):
+else:
   try:
       while True:
           turn_on_led(LED_RED_GPIO)
