@@ -65,6 +65,7 @@ else:
         turn_on_led(LED_GREEN_GPIO, duration=10)
         client.disconnect();
   except KeyboardInterrupt:
+    print("Stopped")
     pass
   finally:
     GPIO.cleanup()
