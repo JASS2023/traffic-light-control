@@ -108,7 +108,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Change kubernetes context
-          run: kubectx ${{ matrix.context }}
+        run: kubectx ${{ matrix.context }}
       - name: Create manifest
         env:
           IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
