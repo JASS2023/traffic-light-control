@@ -99,12 +99,16 @@ jobs:
   deploy:
     needs: [build, pushHarbor]
     runs-on: self-hosted
+    strategy:
+      matrix:
+        kube-contex: [rpi1, rpi2, rpi3]
     steps:
       - name: Deploy
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
-
+      - name: Change kubernetes context
+          run: kubectx ${{ matrix.kube-context }}
       - name: Create manifest
         env:
           IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
