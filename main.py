@@ -26,9 +26,9 @@ client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT'])
 
 if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
     try:
-        def on_connect(client,userdata,rc):
+        def on_connect(client, userdata, flags, rc, properties=None):
             client.subscribe("topic/lights")
-        def on_message(client,userdata,msg):
+        def on_message(client, userdata, msg):
             if msg.payload.decode() == "red":
                 # Red phase
                 turn_on_led(LED_RED_GPIO, duration=14)
