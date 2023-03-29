@@ -14,8 +14,6 @@ GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 client = mqtt.Client()
-client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
-client.loop_forever()
 
 if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
     try:
@@ -38,11 +36,16 @@ if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
                 GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
         client.on_connect = on_connect
         client.on_message = on_message
+        client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+        client.loop_forever()
     except KeyboardInterrupt:
       pass
 else:
   try:
     while True:
+        client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+        client.loop_forever()
+
         # Red phase => Other green
         client.publish("topic/lights", "green")
         GPIO.cleanup()
