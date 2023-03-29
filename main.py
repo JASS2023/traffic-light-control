@@ -22,7 +22,7 @@ GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 client = mqtt.Client()
-client.connect(os.environ['MQTT_BROKER_IP'],os.environ['MQTT_BROKER_PORT'],60)
+client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
 
 if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
     try:
