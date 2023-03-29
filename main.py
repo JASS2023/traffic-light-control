@@ -16,10 +16,13 @@ GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 client = mqtt.Client()
 
 if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
+    print("I am the LEADER")
     try:
         def on_connect(client, userdata, flags, rc, properties=None):
             client.subscribe("topic/lights")
+            print("Did subscribe to topic")
         def on_message(client, userdata, msg):
+            print("Got a message: " + msg.payload.decode())
             GPIO.cleanup()
             if msg.payload.decode() == "red":
                 # Red phase
@@ -36,34 +39,39 @@ if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
                 GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
         client.on_connect = on_connect
         client.on_message = on_message
+        print("Connecting...")
         client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+        print("Connected")
         client.loop_forever()
     except KeyboardInterrupt:
       pass
 else:
+  print("I am NOT the LEADER")
   try:
     while True:
+        print("Connecting...")
         client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+        print("Connected")
         client.loop_forever()
 
-        # Red phase => Other green
+        print("Red phase => Other green")
         client.publish("topic/lights", "green")
         GPIO.cleanup()
         GPIO.output(LED_RED_GPIO, GPIO.HIGH)
         sleep(5)
                 
-        # Prepare green => Other yellow
+        print("Prepare green => Other yellow")
         client.publish("topic/lights", "yellow")
         GPIO.cleanup()
         GPIO.output(LED_RED_GPIO, GPIO.HIGH)
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
         
-        # Green phase => Other red
+        print("Green phase => Other red")
         client.publish("topic/lights", "red")
         GPIO.cleanup()
         GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
         
-        # Yellow phase => Other prepare 
+        print("Yellow phase => Other prepare")
         client.publish("topic/lights", "prepare")
         GPIO.cleanup()
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
