@@ -20,9 +20,9 @@ GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 client = mqtt.Client()
-client.connect(os.environ['MQTT_BROKER_IP'],1883,60)
+client.connect(os.environ['MQTT_BROKER_IP'],os.environ['MQTT_BROKER_PORT'],60)
 
-if !os.environ['TRAFFIC_LIGHT_IS_LEADER']:
+if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
   def on_connect(client,userdata,rc):
      client.subscribe("topic/lights")
 
