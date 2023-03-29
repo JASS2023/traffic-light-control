@@ -30,7 +30,7 @@ try:
         # Yellow phase
         turn_on_led(LED_YELLOW_GPIO, duration=2)
 except KeyboardInterrupt:
-    print("Stopped")
+    print("Stopped the traffic light")
     pass
 finally:
     GPIO.cleanup()
