@@ -63,17 +63,20 @@ else:
         print("Prepare green => Other yellow")
         client.publish("topic/lights", "yellow")
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+        sleep(2)
         
         print("Green phase => Other red")
         client.publish("topic/lights", "red")
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
+        sleep(5)
         
         print("Yellow phase => Other prepare")
         client.publish("topic/lights", "prepare")
         GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+        sleep(2)
   except KeyboardInterrupt:
     pass
   finally:
