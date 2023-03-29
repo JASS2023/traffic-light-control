@@ -23,7 +23,9 @@ if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
             print("Did subscribe to topic")
         def on_message(client, userdata, msg):
             print("Got a message: " + msg.payload.decode())
-            GPIO.cleanup()
+            GPIO.output(LED_RED_GPIO, GPIO.LOW)
+            GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
+            GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
             if msg.payload.decode() == "red":
                 # Red phase
                 GPIO.output(LED_RED_GPIO, GPIO.HIGH)
@@ -54,24 +56,23 @@ else:
     while True:
         print("Red phase => Other green")
         client.publish("topic/lights", "green")
-        GPIO.cleanup()
+        GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_RED_GPIO, GPIO.HIGH)
         sleep(5)
                 
         print("Prepare green => Other yellow")
         client.publish("topic/lights", "yellow")
-        GPIO.cleanup()
-        GPIO.output(LED_RED_GPIO, GPIO.HIGH)
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
         
         print("Green phase => Other red")
         client.publish("topic/lights", "red")
-        GPIO.cleanup()
+        GPIO.output(LED_RED_GPIO, GPIO.LOW)
+        GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
         
         print("Yellow phase => Other prepare")
         client.publish("topic/lights", "prepare")
-        GPIO.cleanup()
+        GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
   except KeyboardInterrupt:
     pass
