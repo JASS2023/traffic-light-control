@@ -16,7 +16,7 @@ GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 client = mqtt.Client()
 
 if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
-    print("I am the LEADER")
+    print("I am NOT the LEADER")
     try:
         def on_connect(client, userdata, flags, rc, properties=None):
             client.subscribe("topic/lights")
@@ -46,14 +46,12 @@ if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
     except KeyboardInterrupt:
       pass
 else:
-  print("I am NOT the LEADER")
+  print("I am the LEADER")
   try:
+    print("Connecting...")
+    client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+    print("Connected")
     while True:
-        print("Connecting...")
-        client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
-        print("Connected")
-        client.loop_forever()
-
         print("Red phase => Other green")
         client.publish("topic/lights", "green")
         GPIO.cleanup()
