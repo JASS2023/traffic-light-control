@@ -19,75 +19,72 @@ GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 client = mqtt.Client()
+print("Connecting...")
+client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+print("Connected")
+traffic_light_id = os.environ['TRAFFIC_LIGHT_ID']
+traffic_light_group = os.environ['TRAFFIC_LIGHT_GROUP']
 
-if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
-    print("I am NOT the LEADER")
-    try:
-        def on_connect(client, userdata, flags, rc, properties=None):
-            client.subscribe("topic/lights")
-            print("Did subscribe to topic")
-        def on_message(client, userdata, msg):
-            print("Got a message: " + msg.payload.decode())
-            GPIO.output(LED_RED_GPIO, GPIO.LOW)
-            GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
-            GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
-            if msg.payload.decode() == "red":
-                # Red phase
-                GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-            if msg.payload.decode() == "yellow":
-                # Yellow phase
-                GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-            if msg.payload.decode() == "green":
-                # Green phase
-                GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
-            if msg.payload.decode() == "prepare":
-                # pre green 
-                GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-                GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+topic = f"topic/{traffic_light_group}/lights"
+
+def on_connect(client, userdata, flags, rc, properties=None):
+    client.subscribe(topic)
+    print("Did subscribe to topic")
+
+def on_message(client, userdata, msg):
+    print("Got a message: " + msg.payload.decode())
+    GPIO.output(LED_RED_GPIO, GPIO.LOW)
+    GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
+    GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
+    match msg.payload.decode():
+        case "red":
+            turn_on_led(LED_RED_GPIO)
+            GPIO.output(LED_RED_GPIO, GPIO.HIGH)
+        case "yellow":
+            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+        case "green":
+            GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
+        case "prepare":
+            GPIO.output(LED_RED_GPIO, GPIO.HIGH)
+            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+
+try: 
+    if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
+        print("I am NOT the LEADER")
         client.on_connect = on_connect
         client.on_message = on_message
-        print("Connecting...")
-        client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
-        print("Connected")
         client.loop_forever()
-    except KeyboardInterrupt:
-      pass
-else:
-  print("I am the LEADER")
-  try:
-    print("Connecting...")
-    client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
-    client.publish("topic/lights", "red")
-    print("Connected")
-    while True:
-        GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
-        GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-        sleep(CLEARANCE_TIME) # clearance phase
-        
-        client.publish("topic/lights", "prepare")
-        sleep(PREPARE_TIME) # prepare non-leader
-        
-        client.publish("topic/lights", "green")
-        sleep(GREEN_TIME) # green non-leader
-                
-        client.publish("topic/lights", "yellow")
-        sleep(YELLOW_TIME) # yellow non-leader
-        
-        client.publish("topic/lights", "red")
-        sleep(CLEARANCE_TIME) # clearance phase
-        
-        GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-        sleep(PREPARE_TIME) # prepare leader
-        
-        GPIO.output(LED_RED_GPIO, GPIO.LOW)
-        GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
-        GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
-        sleep(GREEN_TIME) # green leader
-        
-        GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
-        GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-        sleep(YELLOW_TIME) # yellow leader
-  except KeyboardInterrupt:
+    else:
+        print("I am the LEADER")
+        while True:
+            GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
+            GPIO.output(LED_RED_GPIO, GPIO.HIGH)
+            sleep(CLEARANCE_TIME) # clearance phase
+            
+            client.publish(topic, "prepare")
+            sleep(PREPARE_TIME) # prepare non-leader
+            
+            client.publish(topic, "green")
+            sleep(GREEN_TIME) # green non-leader
+                    
+            client.publish(topic, "yellow")
+            sleep(YELLOW_TIME) # yellow non-leader
+            
+            client.publish(topic, "red")
+            sleep(CLEARANCE_TIME) # clearance phase
+            
+            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+            sleep(PREPARE_TIME) # prepare leader
+            
+            GPIO.output(LED_RED_GPIO, GPIO.LOW)
+            GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
+            GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
+            sleep(GREEN_TIME) # green leader
+            
+            GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
+            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+            sleep(YELLOW_TIME) # yellow leader
+except KeyboardInterrupt:
     pass
-  finally:
+finally:
     GPIO.cleanup()
