@@ -82,70 +82,68 @@ jobs:
             pi: "p1"
           - role: "follower"
             pi: "p2"
-    steps:
-      - name: Deploy
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
+        steps:
+          - name: Deploy
+            uses: actions/checkout@v3
+            with:
+              fetch-depth: 1
+          - name: Create env file for leader traffic light
+            if: ${{ matrix.role }} == "leader"
+            run: |
+              touch .env
+              echo "
+              MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
+              MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
+              TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
+              TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
+              TRAFFIC_LIGHT_ID=1
+              TRAFFIC_LIGHT_IS_LEADER="TRUE" > .env
+          - name: Create env file for follower traffic light
+          if: ${{ matrix.role }} == "follower"
+          run: |
+            touch .env
+            echo "
+            MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
+            MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
+            TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
+            TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
+            TRAFFIC_LIGHT_ID=2
+            TRAFFIC_LIGHT_IS_LEADER=FALSE" > .env
 
-      - name: Create env file for leader traffic light
-        if: ${{ matrix.role }} == "leader"
-        run: |
-          touch .env
-          echo "
-          MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
-          MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
-          TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
-          TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
-          TRAFFIC_LIGHT_ID=1
-          TRAFFIC_LIGHT_IS_LEADER="TRUE" > .env
-
-      - name: Create env file for follower traffic light
-      if: ${{ matrix.role }} == "follower"
-      run: |
-        touch .env
-        echo "
-        MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
-        MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
-        TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
-        TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
-        TRAFFIC_LIGHT_ID=2
-        TRAFFIC_LIGHT_IS_LEADER=FALSE" > .env
-
-      - name: Create manifest
-        env:
-          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
-        run: |
-          touch manifest.yml
-          echo "
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: traffic-light-control
-          spec:
-            replicas: 1
-            strategy:
-              type: Recreate
-            selector:
-              matchLabels:
-                app: traffic-light-control
-            template:
+          - name: Create manifest
+            env:
+              IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
+            run: |
+              touch manifest.yml
+              echo "
+              apiVersion: apps/v1
+              kind: Deployment
               metadata:
-                labels:
-                  app: traffic-light-control
+                name: traffic-light-control
               spec:
-                containers:
-                  - name: traffic-light-control
-                    image: ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
-                    imagePullPolicy: Always
-                    securityContext:
-                      privileged: true
-                    volumeMounts:
+                replicas: 1
+                strategy:
+                  type: Recreate
+                selector:
+                  matchLabels:
+                    app: traffic-light-control
+                template:
+                  metadata:
+                    labels:
+                      app: traffic-light-control
+                  spec:
+                    containers:
+                      - name: traffic-light-control
+                        image: ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+                        imagePullPolicy: Always
+                        securityContext:
+                          privileged: true
+                        volumeMounts:
+                          - name: dev-gpiomem
+                            mountPath: /dev/gpiomem
+                    volumes:
                       - name: dev-gpiomem
-                        mountPath: /dev/gpiomem
-                volumes:
-                  - name: dev-gpiomem
-                    hostPath:
-                      path: /dev/gpiomem" > manifest.yml
-      - name: Set Kube Config
-        run: kubectl rollout restart -f manifest.yml
+                        hostPath:
+                          path: /dev/gpiomem" > manifest.yml
+          - name: Set Kube Config
+            run: kubectl rollout restart -f manifest.yml
