@@ -7,6 +7,11 @@ LED_RED_GPIO = 14
 LED_YELLOW_GPIO = 18
 LED_GREEN_GPIO = 24
 
+CLEARANCE_TIME = 3 # TODO: Calculate based on speed/distance
+GREEN_TIME = 5
+YELLOW_TIME = 2
+PREPARE_TIME = 2
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(LED_GREEN_GPIO, GPIO.OUT, initial=GPIO.LOW)
@@ -57,27 +62,31 @@ else:
     while True:
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-        sleep(2) # clearance phase
+        sleep(CLEARANCE_TIME) # clearance phase
+        
         client.publish("topic/lights", "prepare")
-        sleep(2) # prepare non-leader
+        sleep(PREPARE_TIME) # prepare non-leader
+        
         client.publish("topic/lights", "green")
-        sleep(5) # green non-leader
+        sleep(GREEN_TIME) # green non-leader
                 
         client.publish("topic/lights", "yellow")
-        sleep(2) # yellow non-leader
+        sleep(YELLOW_TIME) # yellow non-leader
+        
         client.publish("topic/lights", "red")
-        sleep(2) # clearance phase
+        sleep(CLEARANCE_TIME) # clearance phase
+        
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-        sleep(2) # prepare leader
+        sleep(PREPARE_TIME) # prepare leader
         
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
-        sleep(5) # green leader
+        sleep(GREEN_TIME) # green leader
         
         GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-        sleep(2) # yellow leader
+        sleep(YELLOW_TIME) # yellow leader
   except KeyboardInterrupt:
     pass
   finally:
