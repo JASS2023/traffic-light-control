@@ -100,17 +100,17 @@ jobs:
             TRAFFIC_LIGHT_ID=1
             TRAFFIC_LIGHT_IS_LEADER="TRUE" > .env
 
-          - name: Create env file for follower traffic light
-          if: ${{ matrix.role }} == "follower"
-          run: |
-            touch .env
-            echo "
-            MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
-            MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
-            TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
-            TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
-            TRAFFIC_LIGHT_ID=2
-            TRAFFIC_LIGHT_IS_LEADER=FALSE" > .env
+        - name: Create env file for follower traffic light
+        if: ${{ matrix.role }} == "follower"
+        run: |
+          touch .env
+          echo "
+          MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
+          MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
+          TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
+          TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
+          TRAFFIC_LIGHT_ID=2
+          TRAFFIC_LIGHT_IS_LEADER=FALSE" > .env
 
         - name: Create manifest
           env:
