@@ -92,3 +92,50 @@ jobs:
 
       - name: Push to Harbor
         run: docker push ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+
+  deploy:
+    needs: [build, pushHarbor]
+    runs-on: self-hosted
+    steps:
+      - name: Deploy
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Create manifest
+        env:
+          IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
+        run: |
+          touch manifest.yml
+          echo "
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: traffic-light
+          spec:
+            replicas: 1
+            strategy:
+              type: Recreate
+            selector:
+              matchLabels:
+                app: traffic-light
+            template:
+              metadata:
+                labels:
+                  app: traffic-light
+              spec:
+                containers:
+                  - name: traffic-light
+                    image: ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+                    imagePullPolicy: Always
+                    securityContext:
+                      privileged: true
+                    volumeMounts:
+                      - name: dev-gpiomem
+                        mountPath: /dev/gpiomem
+                volumes:
+                  - name: dev-gpiomem
+                    hostPath:
+                      path: /dev/gpiomem" > manifest.yml
+      - name: Set Kube Config
+        run: kubectl rollout restart -f manifest.yml
