@@ -38,7 +38,6 @@ def on_message(client, userdata, msg):
     GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
     match msg.payload.decode():
         case "red":
-            turn_on_led(LED_RED_GPIO)
             GPIO.output(LED_RED_GPIO, GPIO.HIGH)
         case "yellow":
             GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
