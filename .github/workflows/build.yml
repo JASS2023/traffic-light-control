@@ -69,7 +69,7 @@ jobs:
           push: true
 
   deploy:
-    needs: [build, pushHarbor]
+    needs: [build]
     runs-on: self-hosted
     steps:
       - name: Deploy
