@@ -4,6 +4,9 @@ env:
   HARBOR_URL: harbor.mtze.me
   HARBOR_PROJECT: jass23
   IMAGE_NAME: traffic-light-control
+  MQTT_BROKER_IP: 192.168.0.223
+  MQTT_BROKER_PORT: 1883
+  TRAFFIC_LIGHT_GROUP: 1 
 
 on:
   push:
@@ -68,27 +71,81 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           push: true
 
-  pushHarbor:
-    needs: build
-    runs-on: self-hosted
-    env:
-      IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
-    steps:
-      - name: Set Compute Tag as env variable
-        run: echo "${{ env.IMAGE_VERSION }}"
+  deploy:
+    needs: [build]
+    includes_only:
+      runs-on: self-hosted
+      strategy:
+      matrix:
+        include:
+          - role: "leader"
+            pi: "p1"
+          - role: "follower"
+            pi: "p2"
+      steps:
+        - name: Deploy
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 1
 
-      - name: Pull Image from Github Container Registry
-        run: docker pull ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+        - name: Create env file for leader traffic light
+          if: ${{ matrix.role }} == "leader"
+          run: |
+            touch .env
+            echo "
+            MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
+            MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
+            TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
+            TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
+            TRAFFIC_LIGHT_ID=1
+            TRAFFIC_LIGHT_IS_LEADER="TRUE" > .env
 
-      - name: Retag Image
-        run: docker tag ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }} ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+          - name: Create env file for follower traffic light
+          if: ${{ matrix.role }} == "follower"
+          run: |
+            touch .env
+            echo "
+            MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
+            MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
+            TRAFFIC_LIGHT_ID=${{ env.TRAFFIC_LIGHT_ID }}
+            TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}
+            TRAFFIC_LIGHT_ID=2
+            TRAFFIC_LIGHT_IS_LEADER=FALSE" > .env
 
-      - name: Login to Harbor
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.HARBOR_URL }}
-          username: ${{ secrets.HARBOR_USER }}
-          password: ${{ secrets.HARBOR_TOKEN }}
-
-      - name: Push to Harbor
-        run: docker push ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+        - name: Create manifest
+          env:
+            IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
+          run: |
+            touch manifest.yml
+            echo "
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: traffic-light-control
+            spec:
+              replicas: 1
+              strategy:
+                type: Recreate
+              selector:
+                matchLabels:
+                  app: traffic-light-control
+              template:
+                metadata:
+                  labels:
+                    app: traffic-light-control
+                spec:
+                  containers:
+                    - name: traffic-light-control
+                      image: ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+                      imagePullPolicy: Always
+                      securityContext:
+                        privileged: true
+                      volumeMounts:
+                        - name: dev-gpiomem
+                          mountPath: /dev/gpiomem
+                  volumes:
+                    - name: dev-gpiomem
+                      hostPath:
+                        path: /dev/gpiomem" > manifest.yml
+        - name: Set Kube Config
+          run: kubectl rollout restart -f manifest.yml
