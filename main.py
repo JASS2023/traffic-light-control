@@ -52,29 +52,32 @@ else:
   try:
     print("Connecting...")
     client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+    client.publish("topic/lights", "red")
     print("Connected")
     while True:
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-        sleep(2)
+        sleep(2) # clearance phase
+        client.publish("topic/lights", "prepare")
+        sleep(2) # prepare non-leader
         client.publish("topic/lights", "green")
-        sleep(5)
+        sleep(5) # green non-leader
                 
         client.publish("topic/lights", "yellow")
-        sleep(2)
+        sleep(2) # yellow non-leader
         client.publish("topic/lights", "red")
-        sleep(2)
+        sleep(2) # clearance phase
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-        sleep(2)
+        sleep(2) # prepare leader
         
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
-        sleep(5)
+        sleep(5) # green leader
         
         GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-        sleep(2)
+        sleep(2) # yellow leader
   except KeyboardInterrupt:
     pass
   finally:
