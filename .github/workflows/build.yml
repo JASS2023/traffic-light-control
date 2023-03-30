@@ -111,21 +111,21 @@ jobs:
           apiVersion: apps/v1
           kind: Deployment
           metadata:
-            name: traffic-light
+            name: traffic-light-control
           spec:
             replicas: 1
             strategy:
               type: Recreate
             selector:
               matchLabels:
-                app: traffic-light
+                app: traffic-light-control
             template:
               metadata:
                 labels:
-                  app: traffic-light
+                  app: traffic-light-control
               spec:
                 containers:
-                  - name: traffic-light
+                  - name: traffic-light-control
                     image: ${{ env.HARBOR_URL }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
                     imagePullPolicy: Always
                     securityContext:
