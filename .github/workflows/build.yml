@@ -45,9 +45,6 @@ jobs:
             if (context.eventName === "pull_request") {
               return "pr-" + context.issue.number;
             }
-            if (context.eventName === "release") {
-              return "latest";
-            }
             if (context.eventName === "push") {
               if (context.ref.startsWith("refs/tags/")) {
                 return context.ref.slice(10);
@@ -56,7 +53,7 @@ jobs:
                 return "develop";
               }
             }
-            return "FALSE";
+            return "latest";
 
       - id: output-tag
         run: echo "image_version=${{ steps.compute-tag.outputs.result }}" >> "$GITHUB_OUTPUT"
