@@ -28,7 +28,7 @@ traffic_light_group = os.environ['TRAFFIC_LIGHT_GROUP']
 topic = f"traffic-light/{traffic_light_group}/{traffic_light_id}"
 
 def on_connect(client, userdata, flags, rc, properties=None):
-    client.subscribe(f"traffic-light/{traffic_light_group}/*")
+    client.subscribe(f"traffic-light/{traffic_light_group}/#")
     print("Did subscribe to topic")
 
 def on_message(client, userdata, msg):
