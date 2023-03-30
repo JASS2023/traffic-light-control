@@ -55,6 +55,7 @@ try:
         client.loop_forever()
     else:
         print("I am the LEADER")
+        client.publish(topic, "red")
         while True:
             GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
             GPIO.output(LED_RED_GPIO, GPIO.HIGH)
