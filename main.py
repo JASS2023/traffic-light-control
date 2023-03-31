@@ -59,6 +59,9 @@ try:
         client.loop_forever()
     else:
         print("I am the LEADER")
+        
+        client.loop_start()
+        
         traffic_light_ids = os.environ['ALL_TRAFFIC_LIGHT_IDS'].split(",")
 
         for i in traffic_light_ids:
