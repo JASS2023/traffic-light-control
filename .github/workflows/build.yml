@@ -130,7 +130,7 @@ jobs:
                     hostPath:
                       path: /dev/gpiomem" > manifest.yml
       - name: Set Context for Kube Config
-        run: kubectl config set-context ${{ matrix.role == 'leader' && 'rpi1' || 'rpi2' }}
+        run: kubectl config use-context ${{ matrix.role == 'leader' && 'rpi1' || 'rpi2' }}
 
       - name: Set Kube Config
         run: kubectl rollout restart -f manifest.yml
