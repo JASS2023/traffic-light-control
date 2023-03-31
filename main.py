@@ -61,8 +61,8 @@ try:
         print("I am the LEADER")
         traffic_light_ids = os.environ['ALL_TRAFFIC_LIGHT_IDS'].split(",")
 
-        for (i = 0; i < len(traffic_light_ids), i++):
-            client.publish(f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}", "red")
+        for i in traffic_light_ids:
+            client.publish(f"traffic-light/{traffic_light_group}/{i}", "red")
         
         i = 0
         
