@@ -78,30 +78,12 @@ jobs:
       matrix:
         include:
           - role: "leader"
-            pi: "p1"
           - role: "follower"
-            pi: "p2"
     steps:
       - name: Deploy
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
-      - name: Create env file for basic infos
-        run: |
-          touch .env
-          echo "MQTT_BROKER_IP=${{ env.MQTT_BROKER_IP }}
-          MQTT_BROKER_PORT=${{ env.MQTT_BROKER_PORT }}
-          TRAFFIC_LIGHT_GROUP=${{ env.TRAFFIC_LIGHT_GROUP }}" > .env
-      - name: Create env file for leader traffic light
-        if: ${{ matrix.role }} == "leader"
-        run: |
-          echo "TRAFFIC_LIGHT_ID=1
-          TRAFFIC_LIGHT_IS_LEADER=TRUE" >> .env
-      - name: Create env file for follower traffic light
-        if: ${{ matrix.role }} == "follower"
-        run: |
-          echo "TRAFFIC_LIGHT_ID=2
-          TRAFFIC_LIGHT_IS_LEADER=FALSE" >> .env
       - name: Create manifest
         env:
           IMAGE_VERSION: ${{ needs.build.outputs.image_version }}
@@ -127,6 +109,17 @@ jobs:
                   - name: traffic-light-control
                     image: ghcr.io/jass2023/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
                     imagePullPolicy: Always
+                    env:
+                      - name: MQTT_BROKER_IP
+                        value: ${{ env.MQTT_BROKER_IP }}
+                      - name: MQTT_BROKER_PORT
+                        value: ${{ env.MQTT_BROKER_PORT }}
+                      - name: TRAFFIC_LIGHT_GROUP
+                        value: ${{ env.TRAFFIC_LIGHT_GROUP }}
+                      - name: TRAFFIC_LIGHT_ID
+                        value: ${{ matrix.role == 'leader' && '1' || '2' }}
+                      - name: TRAFFIC_LIGHT_IS_LEADER
+                        value: ${{ matrix.role == 'leader' && 'TRUE' || 'FALSE' }}
                     securityContext:
                       privileged: true
                     volumeMounts:
@@ -136,5 +129,9 @@ jobs:
                   - name: dev-gpiomem
                     hostPath:
                       path: /dev/gpiomem" > manifest.yml
+      - name: Set Context for Kube Config
+        run: |
+          echo 'current-context: ${{ matrix.role == 'leader' && 'rpi1' || 'rpi2' }}' >> ~/.kube/config
+
       - name: Set Kube Config
         run: kubectl rollout restart -f manifest.yml
