@@ -111,15 +111,15 @@ jobs:
                     imagePullPolicy: Always
                     env:
                       - name: MQTT_BROKER_IP
-                        value: ${{ env.MQTT_BROKER_IP }}
+                        value: "${{ env.MQTT_BROKER_IP }}"
                       - name: MQTT_BROKER_PORT
-                        value: ${{ env.MQTT_BROKER_PORT }}
+                        value: "${{ env.MQTT_BROKER_PORT }}"
                       - name: TRAFFIC_LIGHT_GROUP
-                        value: ${{ env.TRAFFIC_LIGHT_GROUP }}
+                        value: "${{ env.TRAFFIC_LIGHT_GROUP }}"
                       - name: TRAFFIC_LIGHT_ID
-                        value: ${{ matrix.role == 'leader' && '1' || '2' }}
+                        value: "${{ matrix.role == 'leader' && '1' || '2' }}"
                       - name: TRAFFIC_LIGHT_IS_LEADER
-                        value: ${{ matrix.role == 'leader' && 'TRUE' || 'FALSE' }}
+                        value: "${{ matrix.role == 'leader' && 'TRUE' || 'FALSE' }}"
                     securityContext:
                       privileged: true
                     volumeMounts:
