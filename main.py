@@ -15,7 +15,7 @@ PREPARE_TIME = 2
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(LED_GREEN_GPIO, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.HIGH)
 GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 client = mqtt.Client()
@@ -67,7 +67,7 @@ try:
         for i in traffic_light_ids:
             client.publish(f"traffic-light/{traffic_light_group}/{i}", "red")
         
-        i = 0
+        i = -1
         
         while True:
             i += 1
