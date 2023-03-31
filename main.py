@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 from time import sleep
 import paho.mqtt.client as mqtt
+import json
 import os
 
 LED_RED_GPIO = 14
@@ -22,28 +23,62 @@ client = mqtt.Client()
 
 traffic_light_group = os.environ['TRAFFIC_LIGHT_GROUP']
 traffic_light_id = os.environ['TRAFFIC_LIGHT_ID']
+traffic_lights_coords = os.environ['ALL_TRAFFIC_COORDS'].split(",")
+traffic_lights_x = []
+traffic_lights_y = []
+traffic_lights_counter = []
+for i in range(len(traffic_lights_coords)):
+    if i%2==0:
+        traffic_lights_counter.append(0)
+        traffic_lights_x.append(traffic_lights_coords[i])
+    else:
+        traffic_lights_y.append(traffic_lights_coords[i])
+        
+
 
 topic = f"traffic-light/{traffic_light_group}/{traffic_light_id}"
+topic2 = f"vehicle/#/status"
 
 def on_connect(client, userdata, flags, rc, properties=None):
     client.subscribe(topic)
-    print("Did subscribe to topic")
+    if "FALSE" != os.environ['TRAFFIC_LIGHT_IS_LEADER']:
+        client.subscribe(topic2)
+    print("Did subscribe to topic(s)")
 
 def on_message(client, userdata, msg):
     print("Got a message: " + msg.payload.decode())
-    GPIO.output(LED_RED_GPIO, GPIO.LOW)
-    GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
-    GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
-    match msg.payload.decode():
-        case "red":
-            GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-        case "yellow":
-            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-        case "green":
-            GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
-        case "prepare":
-            GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+    if message.topic.find("vehicle") == -1:
+        GPIO.output(LED_RED_GPIO, GPIO.LOW)
+        GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
+        GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
+        match msg.payload.decode():
+            case "red":
+                GPIO.output(LED_RED_GPIO, GPIO.HIGH)
+            case "yellow":
+                GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+            case "green":
+                GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
+            case "prepare":
+                GPIO.output(LED_RED_GPIO, GPIO.HIGH)
+                GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
+    else:
+        decoded_msg_vehicle = msg.payload.decode()
+        parsed_msg = json.loads(decoded_msg_vehicle)
+        x = parsed_msg["coordinates"]["x"]
+        y = parsed_msg["coordinates"]["y"]
+        manh_dist = []
+        
+        min_dist = abs(x - traffic_lights_x[0]) + abs(y - traffic_lights_y[0])
+        min_i = 0
+        for i in range(len(traffic_lights_counter)):
+            dist = abs(x - traffic_lights_x[i]) + abs(y - traffic_lights_y[i])
+            if min_dist > dist:
+                min_i = i
+                min_dist = dist
+        if min_dist <= 1:
+            traffic_lights_counter[min_i] += 1
+             
+        
 
 client.on_connect = on_connect
 client.on_message = on_message
@@ -70,8 +105,18 @@ try:
         i = -1
         
         while True:
+            
             i += 1
             i = i % len(traffic_light_ids)
+            
+            max_count = traffic_lights_counter[0]
+            max_j = 0
+            for j in range(len(traffic_lights_counter)):
+                if max_count < traffic_lights_counter[j]:
+                    max_count = traffic_lights_counter[j]
+                    max_j = j
+            if max_count > 0:
+                i = max_j
             
             current_traffic_light = f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}"
             
@@ -79,6 +124,7 @@ try:
             client.publish(current_traffic_light, "prepare")
             sleep(PREPARE_TIME)
             client.publish(current_traffic_light, "green")
+            traffic_lights_counter[i] = 0
             sleep(GREEN_TIME)
             client.publish(current_traffic_light, "yellow")
             sleep(YELLOW_TIME)
