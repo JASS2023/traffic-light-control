@@ -67,7 +67,8 @@ try:
         i = 0
         
         while True:
-            i = i++ % len(traffic_light_ids)
+            i += 1
+            i = i % len(traffic_light_ids)
             
             current_traffic_light = f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}"
             
