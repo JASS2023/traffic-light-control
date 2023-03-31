@@ -19,16 +19,14 @@ GPIO.setup(LED_RED_GPIO, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED_YELLOW_GPIO, GPIO.OUT, initial=GPIO.LOW)
 
 client = mqtt.Client()
-print("Connecting...")
-client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
-print("Connected")
-traffic_light_id = os.environ['TRAFFIC_LIGHT_ID']
+
 traffic_light_group = os.environ['TRAFFIC_LIGHT_GROUP']
+traffic_light_id = os.environ['TRAFFIC_LIGHT_ID']
 
 topic = f"traffic-light/{traffic_light_group}/{traffic_light_id}"
 
 def on_connect(client, userdata, flags, rc, properties=None):
-    client.subscribe(f"traffic-light/{traffic_light_group}/#")
+    client.subscribe(topic)
     print("Did subscribe to topic")
 
 def on_message(client, userdata, msg):
@@ -47,43 +45,40 @@ def on_message(client, userdata, msg):
             GPIO.output(LED_RED_GPIO, GPIO.HIGH)
             GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
 
+client.on_connect = on_connect
+client.on_message = on_message
+
+print("Connecting...")
+client.connect(os.environ['MQTT_BROKER_IP'], int(os.environ['MQTT_BROKER_PORT']))
+print("Connected")
+
 try: 
     if "FALSE" == os.environ['TRAFFIC_LIGHT_IS_LEADER']:
         print("I am NOT the LEADER")
-        client.on_connect = on_connect
-        client.on_message = on_message
+        
         client.loop_forever()
     else:
         print("I am the LEADER")
-        client.publish(topic, "red")
+        traffic_light_ids = os.environ['ALL_TRAFFIC_LIGHT_IDS'].split(",")
+
+        for (i = 0; i < len(traffic_light_ids), i++):
+            client.publish(f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}", "red")
+        
+        i = 0
+        
         while True:
-            GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
-            GPIO.output(LED_RED_GPIO, GPIO.HIGH)
-            sleep(CLEARANCE_TIME) # clearance phase
+            i = i++ % len(traffic_light_ids)
             
-            client.publish(topic, "prepare")
-            sleep(PREPARE_TIME) # prepare non-leader
+            current_traffic_light = f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}"
             
-            client.publish(topic, "green")
-            sleep(GREEN_TIME) # green non-leader
-                    
-            client.publish(topic, "yellow")
-            sleep(YELLOW_TIME) # yellow non-leader
-            
-            client.publish(topic, "red")
-            sleep(CLEARANCE_TIME) # clearance phase
-            
-            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-            sleep(PREPARE_TIME) # prepare leader
-            
-            GPIO.output(LED_RED_GPIO, GPIO.LOW)
-            GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
-            GPIO.output(LED_GREEN_GPIO, GPIO.HIGH)
-            sleep(GREEN_TIME) # green leader
-            
-            GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
-            GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-            sleep(YELLOW_TIME) # yellow leader
+            sleep(CLEARANCE_TIME)
+            client.publish(current_traffic_light, "prepare")
+            sleep(PREPARE_TIME)
+            client.publish(current_traffic_light, "green")
+            sleep(GREEN_TIME)
+            client.publish(current_traffic_light, "yellow")
+            sleep(YELLOW_TIME)
+            client.publish(current_traffic_light, "red")
 except KeyboardInterrupt:
     pass
 finally:
