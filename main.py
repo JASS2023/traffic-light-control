@@ -143,9 +143,9 @@ try:
                 sleep(0.5)
                 continue
             
+            sleep(2) # Artificial sleep for demo
             current_traffic_light = f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}"
             
-            sleep(CLEARANCE_TIME)
             client.publish(current_traffic_light, json_prefix + "prepare" + json_suffix)
             sleep(PREPARE_TIME)
             client.publish(current_traffic_light, json_prefix + "green" + json_suffix)
@@ -154,6 +154,7 @@ try:
             client.publish(current_traffic_light, json_prefix + "yellow" + json_suffix)
             sleep(YELLOW_TIME)
             client.publish(current_traffic_light, json_prefix + "red" + json_suffix)
+            sleep(CLEARANCE_TIME)
 except KeyboardInterrupt:
     pass
 finally:
