@@ -28,7 +28,7 @@ traffic_lights_x = []
 traffic_lights_y = []
 traffic_lights_yaw = []
 traffic_lights_counter = []
-yaw_buffer = []
+yaw_buffer = {}
 
 for i in range(len(traffic_lights_coords)):
     if i%3 == 0:
