@@ -23,16 +23,16 @@ client = mqtt.Client()
 
 traffic_light_group = os.environ['TRAFFIC_LIGHT_GROUP']
 traffic_light_id = os.environ['TRAFFIC_LIGHT_ID']
-traffic_lights_coords = os.environ['ALL_TRAFFIC_COORDS'].split(",")
+traffic_lights_coords = os.environ['ALL_TRAFFIC_COORDS'].split(";")
 traffic_lights_x = []
 traffic_lights_y = []
 traffic_lights_counter = []
 for i in range(len(traffic_lights_coords)):
     if i%2==0:
         traffic_lights_counter.append(0)
-        traffic_lights_x.append(traffic_lights_coords[i])
+        traffic_lights_x.append(float(traffic_lights_coords[i]))
     else:
-        traffic_lights_y.append(traffic_lights_coords[i])
+        traffic_lights_y.append(float(traffic_lights_coords[i]))
         
 
 
@@ -51,7 +51,10 @@ def on_message(client, userdata, msg):
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
-        match msg.payload.decode():
+        
+        decoded_msg_vehicle = msg.payload.decode()
+        parsed_msg = json.loads(decoded_msg_vehicle)["data"]
+        match parsed_msg["color"]:
             case "red":
                 GPIO.output(LED_RED_GPIO, GPIO.HIGH)
             case "yellow":
@@ -63,9 +66,9 @@ def on_message(client, userdata, msg):
                 GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
     else:
         decoded_msg_vehicle = msg.payload.decode()
-        parsed_msg = json.loads(decoded_msg_vehicle)
-        x = parsed_msg["coordinates"]["x"]
-        y = parsed_msg["coordinates"]["y"]
+        parsed_msg = json.loads(decoded_msg_vehicle)["data"]
+        x = float(parsed_msg["coordinates"]["x"])
+        y = float(parsed_msg["coordinates"]["y"])
         manh_dist = []
         
         min_dist = abs(x - traffic_lights_x[0]) + abs(y - traffic_lights_y[0])
@@ -101,14 +104,11 @@ try:
 
         for i in traffic_light_ids:
             client.publish(f"traffic-light/{traffic_light_group}/{i}", "red")
-        
-        i = -1
+                
+        json_prefix = "{ \"type\": \"status_traffic-light\", \"data\": { \"color\": \""
+        json_suffix = "\" } }"
         
         while True:
-            
-            i += 1
-            i = i % len(traffic_light_ids)
-            
             max_count = traffic_lights_counter[0]
             max_j = 0
             for j in range(len(traffic_lights_counter)):
@@ -117,18 +117,21 @@ try:
                     max_j = j
             if max_count > 0:
                 i = max_j
+            else
+                sleep(0.5)
+                continue
             
             current_traffic_light = f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}"
             
             sleep(CLEARANCE_TIME)
-            client.publish(current_traffic_light, "prepare")
+            client.publish(current_traffic_light, json_prefix + "prepare" + json_suffix)
             sleep(PREPARE_TIME)
-            client.publish(current_traffic_light, "green")
+            client.publish(current_traffic_light, json_prefix + "green" + json_suffix)
             traffic_lights_counter[i] = 0
             sleep(GREEN_TIME)
-            client.publish(current_traffic_light, "yellow")
+            client.publish(current_traffic_light, json_prefix + "yellow" + json_suffix)
             sleep(YELLOW_TIME)
-            client.publish(current_traffic_light, "red")
+            client.publish(current_traffic_light, json_prefix + "red" + json_suffix)
 except KeyboardInterrupt:
     pass
 finally:
