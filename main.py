@@ -4,6 +4,8 @@ import paho.mqtt.client as mqtt
 import json
 import os
 
+YAW_TOLERANCE = 40
+
 LED_RED_GPIO = 14
 LED_YELLOW_GPIO = 18
 LED_GREEN_GPIO = 24
@@ -87,7 +89,7 @@ def on_message(client, userdata, msg):
 
         for i in range(len(traffic_lights_counter)):
             traffic_light_yaw = traffic_lights_yaw[i]
-            if (avg_yaw <= ((traffic_light_yaw + 30) % 360)) & (avg_yaw >= ((traffic_light_yaw - 30) % 360)):
+            if (avg_yaw <= ((traffic_light_yaw + YAW_TOLERANCE) % 360)) & (avg_yaw >= ((traffic_light_yaw - YAW_TOLERANCE) % 360)):
                 valid_tl_ids.append(i)
 
         x = float(parsed_msg["coordinates"]["x"])
