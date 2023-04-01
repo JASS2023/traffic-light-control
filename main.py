@@ -73,7 +73,7 @@ def on_message(client, userdata, msg):
         decoded_msg_vehicle = msg.payload.decode()
         parsed_msg = json.loads(decoded_msg_vehicle)["data"]
 
-        if yaw_buffer[parsed_msg["id"]] is None:
+        if not parsed_msg["id"] in yaw_buffer:
             yaw_buffer[parsed_msg["id"]] = []
         
         yaw_buffer[parsed_msg["id"]].append(float(parsed_msg["coordinates"]["yaw"]))
