@@ -178,8 +178,8 @@ try:
             client.publish(current_traffic_light, json_prefix + "prepare" + json_suffix)
             sleep(PREPARE_TIME)
             client.publish(current_traffic_light, json_prefix + "green" + json_suffix)
-            traffic_lights_counter[i] = 0
             sleep(GREEN_TIME)
+            traffic_lights_counter[i] = 0
             client.publish(current_traffic_light, json_prefix + "yellow" + json_suffix)
             sleep(YELLOW_TIME)
             client.publish(current_traffic_light, json_prefix + "red" + json_suffix)
