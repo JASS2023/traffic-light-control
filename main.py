@@ -129,7 +129,7 @@ def on_message(client, userdata, msg):
             if min_dist > dist:
                 min_i = i
                 min_dist = dist
-        if min_dist <= 1:
+        if min_dist <= 1 & min_i in valid_tl_ids:
             traffic_lights_counter[min_i] += 1
              
         
