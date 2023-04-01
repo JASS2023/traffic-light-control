@@ -1,12 +1,12 @@
 name: Build
 
 env:
-  HARBOR_URL: harbor.mtze.me
-  HARBOR_PROJECT: jass23
   IMAGE_NAME: traffic-light-control
-  MQTT_BROKER_IP: 192.168.0.223
+  MQTT_BROKER_IP: fde9:cb0d:1778:1:366a:ea97:eee7:494
   MQTT_BROKER_PORT: 1883
   TRAFFIC_LIGHT_GROUP: 1 
+  ALL_TRAFFIC_COORDS: 8;5.5;9;7
+  ALL_TRAFFIC_LIGHT_IDS: 1,2 
 
 on:
   push:
@@ -120,6 +120,10 @@ jobs:
                         value: \"${{ matrix.role == 'leader' && '1' || '2' }}\"
                       - name: TRAFFIC_LIGHT_IS_LEADER
                         value: \"${{ matrix.role == 'leader' && 'TRUE' || 'FALSE' }}\"
+                      - name: ALL_TRAFFIC_COORDS
+                        value: \"${{ env.ALL_TRAFFIC_COORDS }}\"
+                      - name: ALL_TRAFFIC_LIGHT_IDS
+                        value: \"${{ env.ALL_TRAFFIC_LIGHT_IDS }}\"
                     securityContext:
                       privileged: true
                     volumeMounts:
