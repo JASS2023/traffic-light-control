@@ -69,6 +69,17 @@ def average(yaw_values):
     avg_yaw_degrees = math.degrees(avg_yaw)
     return avg_yaw_degrees
 
+def are_degrees_within_angle(deg1, deg2):
+    # Convert degrees to radians
+    rad1 = math.radians(deg1)
+    rad2 = math.radians(deg2)
+    # Calculate the absolute difference in radians
+    rad_diff = abs(rad1 - rad2)
+    # Convert the angle to radians
+    rad_angle = math.radians(YAW_TOLERANCE)
+    # Check if the absolute difference is equal to or less than the given angle
+    return rad_diff <= rad_angle
+
 def on_message(client, userdata, msg):
     if msg.topic.find("traffic-light") != -1:
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
@@ -105,7 +116,7 @@ def on_message(client, userdata, msg):
 
         for i in range(len(traffic_lights_counter)):
             traffic_light_yaw = traffic_lights_yaw[i]
-            if (avg_yaw <= ((traffic_light_yaw + YAW_TOLERANCE) % 360)) & (avg_yaw >= ((traffic_light_yaw - YAW_TOLERANCE) % 360)):
+            if (are_degrees_within_angle(traffic_light_yaw, avg_yaw)):
                 valid_tl_ids.append(i)
 
         x = float(parsed_msg["coordinates"]["x"])
