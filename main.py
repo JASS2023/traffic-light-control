@@ -40,7 +40,7 @@ for i in range(len(traffic_lights_coords)):
         traffic_lights_yaw.append(float(traffic_lights_coords[i]))
 
 topic = f"traffic-light/{traffic_light_group}/{traffic_light_id}"
-vehicleStatusTopic = f"vehicle/+/status"
+vehicleStatusTopic = "vehicle/+/status"
 
 def on_connect(client, userdata, flags, rc, properties=None):
     client.subscribe(topic)
@@ -87,7 +87,7 @@ def on_message(client, userdata, msg):
 
         for i in range(len(traffic_lights_counter)):
             traffic_light_yaw = traffic_lights_yaw[i]
-            if avg_yaw <= traffic_light_yaw + 45 & avg_yaw >= traffic_light_yaw - 45:
+            if (avg_yaw <= traffic_light_yaw + 45) & (avg_yaw >= traffic_light_yaw - 45):
                 valid_tl_ids.append(i)
 
         x = float(parsed_msg["coordinates"]["x"])
