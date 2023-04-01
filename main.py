@@ -3,6 +3,7 @@ from time import sleep
 import paho.mqtt.client as mqtt
 import json
 import os
+import math
 
 YAW_TOLERANCE = 40
 
@@ -50,8 +51,23 @@ def on_connect(client, userdata, flags, rc, properties=None):
         client.subscribe(vehicleStatusTopic)
     print("Did subscribe to topic(s)")
 
-def average(lst):
-    return sum(lst) / len(lst)
+def average(yaw_values):
+    yaw_values = [math.radians(yaw) for yaw in yaw_values]
+
+    # Calculate the sum of the sines and cosines of the yaw values
+    sum_sines = sum(math.sin(yaw) for yaw in yaw_values)
+    sum_cosines = sum(math.cos(yaw) for yaw in yaw_values)
+
+    # Calculate the average sine and cosine values
+    avg_sine = sum_sines / len(yaw_values)
+    avg_cosine = sum_cosines / len(yaw_values)
+
+    # Calculate the average yaw value in radians
+    avg_yaw = math.atan2(avg_sine, avg_cosine)
+
+    # Convert the average yaw value back to degrees
+    avg_yaw_degrees = math.degrees(avg_yaw)
+    return avg_yaw_degrees
 
 def on_message(client, userdata, msg):
     if msg.topic.find("traffic-light") != -1:
@@ -83,7 +99,7 @@ def on_message(client, userdata, msg):
         if len(yaw_buffer[parsed_msg["id"]]) > 5:
             yaw_buffer[parsed_msg["id"]].pop(0)
 
-        avg_yaw = average(yaw_buffer[parsed_msg["id"]]) % 360
+        avg_yaw = average(yaw_buffer[parsed_msg["id"]])
 
         valid_tl_ids = []
 
