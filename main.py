@@ -37,7 +37,7 @@ for i in range(len(traffic_lights_coords)):
 
 
 topic = f"traffic-light/{traffic_light_group}/{traffic_light_id}"
-topic2 = f"vehicle/#/status"
+topic2 = f"vehicle/#"
 
 def on_connect(client, userdata, flags, rc, properties=None):
     client.subscribe(topic)
@@ -47,7 +47,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
 def on_message(client, userdata, msg):
     print("Got a message: " + msg.payload.decode())
-    if msg.topic.find("vehicle") == -1:
+    if msg.topic.find("traffic-light") != -1:
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
@@ -64,7 +64,7 @@ def on_message(client, userdata, msg):
             case "prepare":
                 GPIO.output(LED_RED_GPIO, GPIO.HIGH)
                 GPIO.output(LED_YELLOW_GPIO, GPIO.HIGH)
-    else:
+    elif msg.topic.find("vehicle") != -1 & msg.topic.find("status") != -1:
         decoded_msg_vehicle = msg.payload.decode()
         parsed_msg = json.loads(decoded_msg_vehicle)["data"]
         x = float(parsed_msg["coordinates"]["x"])
