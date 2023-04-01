@@ -119,6 +119,8 @@ def on_message(client, userdata, msg):
             if (are_degrees_within_angle(traffic_light_yaw, avg_yaw)):
                 valid_tl_ids.append(i)
 
+        client.publish(f"traffic-light/{traffic_light_group}/debug/valid_tl_ids", json.dumps(valid_tl_ids))
+
         x = float(parsed_msg["coordinates"]["x"])
         y = float(parsed_msg["coordinates"]["y"])
                 
@@ -129,10 +131,8 @@ def on_message(client, userdata, msg):
             if min_dist > dist:
                 min_i = i
                 min_dist = dist
-        if min_dist <= 1 & min_i in valid_tl_ids:
+        if (min_dist <= 1) & (min_i in valid_tl_ids):
             traffic_lights_counter[min_i] += 1
-             
-        
 
 client.on_connect = on_connect
 client.on_message = on_message
