@@ -81,13 +81,13 @@ def on_message(client, userdata, msg):
         if len(yaw_buffer[parsed_msg["id"]]) > 5:
             yaw_buffer[parsed_msg["id"]].pop(0)
 
-        avg_yaw = average(yaw_buffer[parsed_msg["id"]])
+        avg_yaw = average(yaw_buffer[parsed_msg["id"]]) % 360
 
         valid_tl_ids = []
 
         for i in range(len(traffic_lights_counter)):
             traffic_light_yaw = traffic_lights_yaw[i]
-            if (avg_yaw <= traffic_light_yaw + 45) & (avg_yaw >= traffic_light_yaw - 45):
+            if (avg_yaw <= ((traffic_light_yaw + 30) % 360)) & (avg_yaw >= ((traffic_light_yaw - 30) % 360)):
                 valid_tl_ids.append(i)
 
         x = float(parsed_msg["coordinates"]["x"])
