@@ -174,8 +174,8 @@ try:
 
             client.publish(f"traffic-light/{traffic_light_group}/debug/yaw_buffer", json.dumps(yaw_buffer))
             client.publish(f"traffic-light/{traffic_light_group}/debug/traffic_lights_counter", json.dumps(traffic_lights_counter))
-            client.publish(f"traffic-light/{traffic_light_group}/debug/average", json.dumps(average(yaw_buffer[i])))
-            client.publish(f"traffic-light/{traffic_light_group}/debug/are_degrees_within_angle", json.dumps(are_degrees_within_angle(average(yaw_buffer[i]), 90)))
+            client.publish(f"traffic-light/{traffic_light_group}/debug/average", json.dumps(average(yaw_buffer["13"])))
+            client.publish(f"traffic-light/{traffic_light_group}/debug/are_degrees_within_angle", json.dumps(are_degrees_within_angle(average(yaw_buffer["13"]), 90)))
             
             
             sleep(2) # Artificial sleep for demo
