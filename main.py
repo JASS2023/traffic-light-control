@@ -101,11 +101,11 @@ try:
         
         traffic_light_ids = os.environ['ALL_TRAFFIC_LIGHT_IDS'].split(",")
 
-        for i in traffic_light_ids:
-            client.publish(f"traffic-light/{traffic_light_group}/{i}", "red")
-                
         json_prefix = "{ \"type\": \"status_traffic-light\", \"data\": { \"color\": \""
         json_suffix = "\" } }"
+
+        for i in traffic_light_ids:
+            client.publish(f"traffic-light/{traffic_light_group}/{i}", json_prefix + "red" + json_suffix)
         
         while True:
             max_count = traffic_lights_counter[0]
