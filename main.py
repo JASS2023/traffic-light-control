@@ -47,7 +47,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
 def on_message(client, userdata, msg):
     print("Got a message: " + msg.payload.decode())
-    if message.topic.find("vehicle") == -1:
+    if msg.topic.find("vehicle") == -1:
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
         GPIO.output(LED_GREEN_GPIO, GPIO.LOW)
@@ -117,7 +117,7 @@ try:
                     max_j = j
             if max_count > 0:
                 i = max_j
-            else
+            else:
                 sleep(0.5)
                 continue
             
