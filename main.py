@@ -169,9 +169,14 @@ try:
             if max_count > 0:
                 i = max_j
             else:
-                client.publish(f"traffic-light/{traffic_light_group}/debug", json.dumps(yaw_buffer))
                 sleep(0.5)
                 continue
+
+            client.publish(f"traffic-light/{traffic_light_group}/debug/yaw_buffer", json.dumps(yaw_buffer))
+            client.publish(f"traffic-light/{traffic_light_group}/debug/traffic_lights_counter", json.dumps(traffic_lights_counter))
+            client.publish(f"traffic-light/{traffic_light_group}/debug/average", json.dumps(average(yaw_buffer[i])))
+            client.publish(f"traffic-light/{traffic_light_group}/debug/are_degrees_within_angle", json.dumps(are_degrees_within_angle(average(yaw_buffer[i]), 90)))
+            
             
             sleep(2) # Artificial sleep for demo
             current_traffic_light = f"traffic-light/{traffic_light_group}/{traffic_light_ids[i]}"
