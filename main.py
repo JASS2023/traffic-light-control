@@ -8,8 +8,8 @@ LED_RED_GPIO = 14
 LED_YELLOW_GPIO = 18
 LED_GREEN_GPIO = 24
 
-CLEARANCE_TIME = 3 # TODO: Calculate based on speed/distance
-GREEN_TIME = 5
+CLEARANCE_TIME = 5 # TODO: Calculate based on speed/distance
+GREEN_TIME = 7
 YELLOW_TIME = 2
 PREPARE_TIME = 2
 
@@ -26,24 +26,30 @@ traffic_light_id = os.environ['TRAFFIC_LIGHT_ID']
 traffic_lights_coords = os.environ['ALL_TRAFFIC_COORDS'].split(";")
 traffic_lights_x = []
 traffic_lights_y = []
+traffic_lights_yaw = []
 traffic_lights_counter = []
+yaw_buffer = []
+
 for i in range(len(traffic_lights_coords)):
-    if i%2==0:
+    if i%3 == 0:
         traffic_lights_counter.append(0)
         traffic_lights_x.append(float(traffic_lights_coords[i]))
-    else:
+    elif i%3 == 1:
         traffic_lights_y.append(float(traffic_lights_coords[i]))
-        
-
+    elif i%3 == 2:
+        traffic_lights_yaw.append(float(traffic_lights_coords[i]))
 
 topic = f"traffic-light/{traffic_light_group}/{traffic_light_id}"
-topic2 = f"vehicle/#"
+vehicleStatusTopic = f"vehicle/+/status"
 
 def on_connect(client, userdata, flags, rc, properties=None):
     client.subscribe(topic)
     if "FALSE" != os.environ['TRAFFIC_LIGHT_IS_LEADER']:
-        client.subscribe(topic2)
+        client.subscribe(vehicleStatusTopic)
     print("Did subscribe to topic(s)")
+
+def average(lst):
+    return sum(lst) / len(lst)
 
 def on_message(client, userdata, msg):
     if msg.topic.find("traffic-light") != -1:
@@ -66,13 +72,30 @@ def on_message(client, userdata, msg):
     elif msg.topic.find("vehicle") != -1 & msg.topic.find("status") != -1:
         decoded_msg_vehicle = msg.payload.decode()
         parsed_msg = json.loads(decoded_msg_vehicle)["data"]
+
+        if yaw_buffer[parsed_msg["id"]] is None:
+            yaw_buffer[parsed_msg["id"]] = []
+        
+        yaw_buffer[parsed_msg["id"]].append(float(parsed_msg["coordinates"]["yaw"]))
+
+        if len(yaw_buffer[parsed_msg["id"]]) > 5:
+            yaw_buffer[parsed_msg["id"]].pop(0)
+
+        avg_yaw = average(yaw_buffer[parsed_msg["id"]])
+
+        valid_tl_ids = []
+
+        for i in range(len(traffic_lights_counter)):
+            traffic_light_yaw = traffic_lights_yaw[i]
+            if avg_yaw <= traffic_light_yaw + 45 & avg_yaw >= traffic_light_yaw - 45:
+                valid_tl_ids.append(i)
+
         x = float(parsed_msg["coordinates"]["x"])
         y = float(parsed_msg["coordinates"]["y"])
-        manh_dist = []
-        
+                
         min_dist = abs(x - traffic_lights_x[0]) + abs(y - traffic_lights_y[0])
         min_i = 0
-        for i in range(len(traffic_lights_counter)):
+        for i in valid_tl_ids:
             dist = abs(x - traffic_lights_x[i]) + abs(y - traffic_lights_y[i])
             if min_dist > dist:
                 min_i = i
