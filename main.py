@@ -5,7 +5,7 @@ import json
 import os
 import math
 
-YAW_TOLERANCE = 40
+YAW_TOLERANCE = 30
 
 LED_RED_GPIO = 14
 LED_YELLOW_GPIO = 18
@@ -169,6 +169,7 @@ try:
             if max_count > 0:
                 i = max_j
             else:
+                client.publish(f"traffic-light/{traffic_light_group}/debug", json.dumps(yaw_buffer))
                 sleep(0.5)
                 continue
             
