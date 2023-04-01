@@ -46,7 +46,6 @@ def on_connect(client, userdata, flags, rc, properties=None):
     print("Did subscribe to topic(s)")
 
 def on_message(client, userdata, msg):
-    print("Got a message: " + msg.payload.decode())
     if msg.topic.find("traffic-light") != -1:
         GPIO.output(LED_RED_GPIO, GPIO.LOW)
         GPIO.output(LED_YELLOW_GPIO, GPIO.LOW)
